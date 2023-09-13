@@ -13,56 +13,75 @@
 
 
 
-WITH SelfJoinCTE AS (
-  SELECT
-    submission_date, 
-    hacker_id
-  FROM
-    submissions
-  WHERE
-    submission_date = '2016-03-01'
-  UNION ALL
-  SELECT
-    t1.submission_date ,
-    t1.hacker_id
-    
-  FROM
-    SelfJoinCTE cte
-  INNER JOIN
-    submissions t1 ON t1.submission_date = 
-    DATEADD(day, 1, cte.submission_date) and t1.hacker_id = cte.hacker_id
-)
-, number_unique_hackers_in_day 
-AS (
-       SELECT submission_date , count(distinct hacker_id) cnt_hacker
-      FROM SelfJoinCTE
-      group by submission_date
-    )
- , hacker_with_max_submission 
-AS (
-        select  *
-            ,   row_number () over (
-                                partition by submission_date 
-                                order by submission_date , cnt desc,  hacker_id 
-                                    )                                                       as rn
-        from 
-                (   select  submission_date
-                        ,   hacker_id
-                        ,   count(*)                                                        as cnt
-                    from submissions
-                    group by submission_date,   hacker_id
-                )                                                                           as tbl
-    )
+WITH    SelfJoinCTE
+    AS  (
+            SELECT
+                    submission_date
+                ,   hacker_id
 
-select 
+            FROM    submissions
+
+            WHERE   submission_date         =       '2016-03-01'
+
+            UNION ALL
+
+            SELECT
+                    t1.submission_date
+                ,   t1.hacker_id
+
+            FROM    SelfJoinCTE                                                                     AS  sjc
+  
+            INNER   JOIN    submissions                                                             AS  t1
+                ON  t1.submission_date      =       DATEADD (   day
+                                                            ,   1
+                                                            ,   sjc.submission_date
+                                                            ) 
+                AND t1.hacker_id            =       sjc.hacker_id
+        )
+
+    ,   number_unique_hackers_in_day 
+    AS  (
+            SELECT  submission_date 
+                ,   count(  distinct    hacker_id   )                                               AS  cnt_hacker
+            
+            FROM    SelfJoinCTE
+
+            group   by  submission_date
+        )
+
+    ,   hacker_with_max_submission 
+    AS (
+            SELECT  *
+                ,   ROW_NUMBER  ()  OVER (
+                                    PARTITION   BY  submission_date 
+                                    ORDER   BY      submission_date 
+                                            ,       cnt                      DESC 
+                                            ,       hacker_id 
+                                        )                                                           AS  rn
+            FROM 
+                (   SELECT  submission_date
+                        ,   hacker_id
+                        ,   count(*)                                                                AS  cnt
+
+                    FROM    submissions
+
+                    GROUP   BY  submission_date
+                            ,   hacker_id
+                )                                                                                   AS  tbl
+        )
+
+SELECT
         hwms.submission_date
     ,   nuhid.cnt_hacker
     ,   hwms.hacker_id
     ,   h.name 
-from    hacker_with_max_submission                                                          as hwms
-inner   join    number_unique_hackers_in_day                                                as nuhid
-            on  hwms.submission_date        =   nuhid.submission_date
+
+FROM    hacker_with_max_submission                                                                  AS  hwms
+
+INNER   JOIN    number_unique_hackers_in_day                                                        AS  nuhid
+            ON  hwms.submission_date        =   nuhid.submission_date
             
-inner   join    hackers                                                                     as h 
-            on  h.hacker_id                 =   hwms.hacker_id
-where   hwms.rn =  1
+INNER   JOIN  
+            ON  h.hacker_id                 =   hwms.hacker_id
+
+WHERE   hwms.rn =  1
