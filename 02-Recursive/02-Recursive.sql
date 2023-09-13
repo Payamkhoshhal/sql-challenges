@@ -12,7 +12,6 @@
 --is the score of the submission. 
 
 
-
 WITH    SelfJoinCTE
     AS  (
             SELECT
