@@ -32,7 +32,7 @@ WITH    SelfJoinCTE
             FROM    SelfJoinCTE                                                                     AS  sjc
   
             INNER   JOIN    submissions                                                             AS  t1
-                ON  t1.submission_date      =       DATEADD (   day
+                ON  t1.submission_date      =       DATEADD (   DAY
                                                             ,   1
                                                             ,   sjc.submission_date
                                                             ) 
@@ -42,11 +42,11 @@ WITH    SelfJoinCTE
     ,   number_unique_hackers_in_day 
     AS  (
             SELECT  submission_date 
-                ,   count(  distinct    hacker_id   )                                               AS  cnt_hacker
+                ,   COUNT   (  DISTINCT    hacker_id   )                                            AS  cnt_hacker
             
             FROM    SelfJoinCTE
 
-            group   by  submission_date
+            GROUP   BY  submission_date
         )
 
     ,   hacker_with_max_submission 
